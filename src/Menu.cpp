@@ -32,7 +32,7 @@ void SplashScreen::render(Display* display, Configuration* config, MachineState*
     char lineBuffer[LCD_COLS + 1];
     display->setLine(0, "Industruino");
     display->setLine(1, "Rain tank controller");
-    snprintf(lineBuffer, sizeof(lineBuffer), "version: %s", GIT_VERSION);
+    snprintf(lineBuffer, sizeof(lineBuffer), "FW: %s", GIT_VERSION);
     display->setLine(2, lineBuffer);
     // Line 3 is left blank
     display->setLine(4, "GitHub: jpcornil-git/");
