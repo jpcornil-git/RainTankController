@@ -1,0 +1,7 @@
+{
+    "sketch": "RainTankController.ino",
+    "board": "industruino:samd:industruino_d21g",
+    "port": "COM44",
+    "output": "build",
+    "prebuild": "python get_git_version.py"
+}

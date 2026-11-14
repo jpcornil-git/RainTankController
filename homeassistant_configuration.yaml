@@ -1,0 +1,628 @@
+# ==============================================================================
+# Home Assistant Configuration for Industruino Rain Tank Controller
+# ==============================================================================
+# Add (part of) this block to your Home Assistant configuration.yaml (or include as a package).
+# Replace '192.168.1.234' with the actual IP address of your Rain Tank Controller.
+# ==============================================================================
+
+modbus:
+  - name: "raintank"
+    type: tcp
+    host: 192.168.1.234
+    port: 502
+    timeout: 5
+    delay: 1
+
+    # --------------------------------------------------------------------------
+    # Discrete Inputs (Binary Sensors - Read-only hardware & alarm states)
+    # --------------------------------------------------------------------------
+    binary_sensors:
+      - name: "Rain Tank Valve Relay State"
+        unique_id: "raintank_valve_relay_state"
+        slave: 1
+        address: 0
+        input_type: discrete_input
+        device_class: opening
+
+      - name: "Rain Tank Alarm Relay State"
+        unique_id: "raintank_alarm_relay_state"
+        slave: 1
+        address: 1
+        input_type: discrete_input
+        device_class: opening
+
+      - name: "Rain Tank Rinsing Active"
+        unique_id: "raintank_rinsing_active"
+        slave: 1
+        address: 2
+        input_type: discrete_input
+        device_class: running
+
+      - name: "Rain Tank DHCP status"
+        unique_id: "raintank_dhcp_status"
+        slave: 1
+        address: 3
+        input_type: discrete_input
+        device_class: running
+
+      - name: "Rain Tank Probe Fault Alarm"
+        unique_id: "raintank_probe_fault"
+        slave: 1
+        address: 4
+        input_type: discrete_input
+        device_class: problem
+
+      - name: "Rain Tank Valve Timeout Alarm"
+        unique_id: "raintank_valve_timeout_fault"
+        slave: 1
+        address: 5
+        input_type: discrete_input
+        device_class: problem
+
+    # --------------------------------------------------------------------------
+    # Coils (Switches - Remote control and binary settings)
+    # --------------------------------------------------------------------------
+    switches:
+      - name: "Rain Tank Save Configuration"
+        unique_id: "raintank_save_config_switch"
+        slave: 1
+        address: 0
+        write_type: coil
+
+      - name: "Rain Tank Clear Alarms"
+        unique_id: "raintank_clear_alarms_switch"
+        slave: 1
+        address: 1
+        write_type: coil
+
+      - name: "Rain Tank System Reboot"
+        unique_id: "raintank_system_reboot_switch"
+        slave: 1
+        address: 2
+        write_type: coil
+
+      - name: "Rain Tank DHCP Mode"
+        unique_id: "raintank_dhcp_mode_switch"
+        slave: 1
+        address: 3
+        write_type: coil
+        verify:
+          input_type: coil
+          address: 3
+          state_on: 1
+          state_off: 0
+
+    # --------------------------------------------------------------------------
+    # Sensors (Telemetry, Configuration Setpoints, and Raw IP Registers)
+    # --------------------------------------------------------------------------
+    sensors:
+      # --- Live Measurement Telemetry (Input Registers) ---
+      - name: "Rain Tank Water Level"
+        unique_id: "raintank_water_level"
+        slave: 1
+        address: 17
+        input_type: input
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "cm"
+        device_class: distance
+        state_class: measurement
+
+      - name: "Rain Tank Sensor Current"
+        unique_id: "raintank_sensor_current"
+        slave: 1
+        address: 16
+        input_type: input
+        data_type: uint16
+        scale: 0.001
+        precision: 2
+        unit_of_measurement: "mA"
+        device_class: current
+        state_class: measurement
+
+      # --- Configuration Setpoints (Holding Registers) ---
+      - name: "Rain Tank Probe Max Height Setpoint"
+        unique_id: "raintank_cfg_probe_max_height"
+        slave: 1
+        address: 0
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "cm"
+
+      - name: "Rain Tank Overflow Height Setpoint"
+        unique_id: "raintank_cfg_tank_max_height"
+        slave: 1
+        address: 1
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "cm"
+
+      - name: "Rain Tank Surface Area Setpoint"
+        unique_id: "raintank_cfg_tank_surface"
+        slave: 1
+        address: 2
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "cm2"
+
+      - name: "Rain Tank Low Water Threshold Setpoint"
+        unique_id: "raintank_cfg_low_water_threshold"
+        slave: 1
+        address: 3
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "cm"
+
+      - name: "Rain Tank Refill Hysteresis Setpoint"
+        unique_id: "raintank_cfg_hysteresis"
+        slave: 1
+        address: 4
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "cm"
+
+      - name: "Rain Tank Valve Timeout Setpoint"
+        unique_id: "raintank_cfg_valve_timeout"
+        slave: 1
+        address: 5
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "min"
+
+      - name: "Rain Tank Valve Rinse Period Setpoint"
+        unique_id: "raintank_cfg_rinse_period"
+        slave: 1
+        address: 6
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "d"
+
+      - name: "Rain Tank Valve Rinse Duration Setpoint"
+        unique_id: "raintank_cfg_rinse_duration"
+        slave: 1
+        address: 7
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "min"
+
+      # --- Network IP Addresses (Raw 2-register blocks unpacked as 4 bytes) ---
+      - name: "Rain Tank Raw IP"
+        unique_id: "raintank_raw_ip"
+        slave: 1
+        address: 8
+        input_type: input
+        count: 2
+        data_type: custom
+        structure: ">4B"
+        precision: 0
+
+      - name: "Rain Tank Raw Subnet"
+        unique_id: "raintank_raw_subnet"
+        slave: 1
+        address: 10
+        input_type: input
+        count: 2
+        data_type: custom
+        structure: ">4B"
+        precision: 0
+
+      - name: "Rain Tank Raw Gateway"
+        unique_id: "raintank_raw_gateway"
+        slave: 1
+        address: 12
+        input_type: input
+        count: 2
+        data_type: custom
+        structure: ">4B"
+        precision: 0
+
+      - name: "Rain Tank Raw DNS"
+        unique_id: "raintank_raw_dns"
+        slave: 1
+        address: 14
+        input_type: input
+        count: 2
+        data_type: custom
+        structure: ">4B"
+        precision: 0
+
+# ------------------------------------------------------------------------------
+# Template Entities: Derived Volume (L), Fill Percentage (%), Formatted IPs & Buttons
+# ------------------------------------------------------------------------------
+template:
+  - sensor:
+      # Calculated Water Volume in Liters: Level (cm) * Surface (cm2) / 1000
+      - name: "Rain Tank Estimated Volume"
+        unique_id: "raintank_estimated_volume"
+        state_class: measurement
+        unit_of_measurement: "L"
+        icon: mdi:cup-water
+        state: >-
+          {% set level = states('sensor.rain_tank_water_level') | float(0) %}
+          {% set surface = states('sensor.rain_tank_surface_area_setpoint') | float(0) %}
+          {{ ((level * surface) / 1000.0) | round(0) }}
+        availability: >-
+          {{ states('sensor.rain_tank_water_level') not in ['unknown', 'unavailable'] and
+             states('sensor.rain_tank_surface_area_setpoint') not in ['unknown', 'unavailable'] }}
+
+      # Calculated Fill Percentage: (Level / Overflow Height) * 100%
+      - name: "Rain Tank Fill Percentage"
+        unique_id: "raintank_fill_percentage"
+        state_class: measurement
+        unit_of_measurement: "%"
+        icon: mdi:gauge
+        state: >-
+          {% set level = states('sensor.rain_tank_water_level') | float(0) %}
+          {% set max_h = states('sensor.rain_tank_overflow_height_setpoint') | float(0) %}
+          {% if max_h > 0 %}
+            {{ ([0, [(level / max_h * 100), 100] | min] | max) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+        availability: >-
+          {{ states('sensor.rain_tank_water_level') not in ['unknown', 'unavailable'] and
+             states('sensor.rain_tank_overflow_height_setpoint') not in ['unknown', 'unavailable'] }}
+
+      # Formatted Dotted-Decimal IP Address Strings (from unpacked 4-byte arrays)
+      - name: "Rain Tank IP Address"
+        unique_id: "raintank_ip_address"
+        icon: mdi:ip
+        state: >-
+          {% set raw = states('sensor.rain_tank_raw_ip') %}
+          {% if raw not in ['unknown', 'unavailable', 'none', ''] %}
+            {% set clean = raw | regex_findall('\\d+') %}
+            {% if clean | length == 4 %}
+              {{ clean | map('int') | join('.') }}
+            {% else %}
+              unavailable
+            {% endif %}
+          {% else %}
+            unavailable
+          {% endif %}
+
+      - name: "Rain Tank Subnet Mask"
+        unique_id: "raintank_subnet_mask"
+        icon: mdi:ip-network
+        state: >-
+          {% set raw = states('sensor.rain_tank_raw_subnet') %}
+          {% if raw not in ['unknown', 'unavailable', 'none', ''] %}
+            {% set clean = raw | regex_findall('\\d+') %}
+            {% if clean | length == 4 %}
+              {{ clean | map('int') | join('.') }}
+            {% else %}
+              unavailable
+            {% endif %}
+          {% else %}
+            unavailable
+          {% endif %}
+
+      - name: "Rain Tank Gateway IP"
+        unique_id: "raintank_gateway_ip"
+        icon: mdi:router-network
+        state: >-
+          {% set raw = states('sensor.rain_tank_raw_gateway') %}
+          {% if raw not in ['unknown', 'unavailable', 'none', ''] %}
+            {% set clean = raw | regex_findall('\\d+') %}
+            {% if clean | length == 4 %}
+              {{ clean | map('int') | join('.') }}
+            {% else %}
+              unavailable
+            {% endif %}
+          {% else %}
+            unavailable
+          {% endif %}
+
+      - name: "Rain Tank DNS IP"
+        unique_id: "raintank_dns_ip"
+        icon: mdi:dns
+        state: >-
+          {% set raw = states('sensor.rain_tank_raw_dns') %}
+          {% if raw not in ['unknown', 'unavailable', 'none', ''] %}
+            {% set clean = raw | regex_findall('\\d+') %}
+            {% if clean | length == 4 %}
+              {{ clean | map('int') | join('.') }}
+            {% else %}
+              unavailable
+            {% endif %}
+          {% else %}
+            unavailable
+          {% endif %}
+
+  # Momentary UI Push Buttons
+  - button:
+      - name: "Set probe max. height"
+        unique_id: "raintank_btn_set_probe_max_height"
+        press:
+          - action: script.write_modbus_register
+            data:
+              address: 0
+              value: "{{ states('input_number.raintank_input_probe_maxheight') | int }}"
+
+      - name: "Set tank max. height"
+        unique_id: "raintank_btn_set_tank_max_height"
+        press:
+          - action: script.write_modbus_register
+            data:
+              address: 1
+              value: "{{ states('input_number.raintank_input_tank_maxheight') | int }}"
+
+      - name: "Set tank surface"
+        unique_id: "raintank_btn_set_tank_surface"
+        press:
+          - action: script.write_modbus_register
+            data:
+              address: 2
+              value: "{{ states('input_number.raintank_input_tank_surface') | int }}"
+
+      - name: "Set tank minimum level"
+        unique_id: "raintank_btn_set_tank_min_level"
+        press:
+          - action: script.write_modbus_register
+            data:
+              address: 3
+              value: "{{ states('input_number.raintank_input_min_level') | int }}"
+
+      - name: "Set refill hysteresis"
+        unique_id: "raintank_btn_set_refill_hysteresis"
+        press:
+          - action: script.write_modbus_register
+            data:
+              address: 4
+              value: "{{ states('input_number.raintank_input_refill_hysteresis') | int }}"
+
+      - name: "Set valve open timeout"
+        unique_id: "raintank_btn_set_valve_open_timeout"
+        press:
+          - action: script.write_modbus_register
+            data:
+              address: 5
+              value: "{{ states('input_number.raintank_input_valve_timeout') | int }}"
+
+      - name: "Set valve rinse period"
+        unique_id: "raintank_btn_set_valve_rinse_period"
+        press:
+          - action: script.write_modbus_register
+            data:
+              address: 6
+              value: "{{ states('input_number.raintank_input_valve_rinse_period') | int }}"
+
+      - name: "Set valve rinse duration"
+        unique_id: "raintank_btn_set_valve_rinse_duration"
+        press:
+          - action: script.write_modbus_register
+            data:
+              address: 7
+              value: "{{ states('input_number.raintank_input_valve_rinse_duration') | int }}"
+
+      - name: "Rain Tank Save Settings to Flash"
+        unique_id: "raintank_btn_save_settings"
+        icon: mdi:content-save-cog
+        press:
+          - action: modbus.write_coil
+            data:
+              hub: raintank
+              slave: 1
+              address: 0
+              state: true
+
+      - name: "Rain Tank Reset Alarms"
+        unique_id: "raintank_btn_clear_alarms"
+        icon: mdi:bell-check
+        press:
+          - action: modbus.write_coil
+            data:
+              hub: raintank
+              slave: 1
+              address: 1
+              state: true
+
+      - name: "Rain Tank Hardware Reboot"
+        unique_id: "raintank_btn_reboot"
+        icon: mdi:restart
+        press:
+          - action: modbus.write_coil
+            data:
+              hub: raintank
+              slave: 1
+              address: 2
+              state: true
+
+      # Buttons to apply IP entries from the input_text helpers below
+      - name: "Rain Tank Apply Static IP"
+        unique_id: "raintank_btn_apply_ip"
+        icon: mdi:check-network
+        press:
+          - action: script.raintank_set_ip_address
+            data:
+              value: "{{ states('input_text.raintank_input_ip') }}"
+              base_address: 8
+
+      - name: "Rain Tank Apply Subnet Mask"
+        unique_id: "raintank_btn_apply_subnet"
+        icon: mdi:check-network
+        press:
+          - action: script.raintank_set_ip_address
+            data:
+              value: "{{ states('input_text.raintank_input_subnet') }}"
+              base_address: 10
+
+      - name: "Rain Tank Apply Gateway IP"
+        unique_id: "raintank_btn_apply_gateway"
+        icon: mdi:check-network
+        press:
+          - action: script.raintank_set_ip_address
+            data:
+              value: "{{ states('input_text.raintank_input_gateway') }}"
+              base_address: 12
+
+      - name: "Rain Tank Apply DNS Server"
+        unique_id: "raintank_btn_apply_dns"
+        icon: mdi:check-network
+        press:
+          - action: script.raintank_set_ip_address
+            data:
+              value: "{{ states('input_text.raintank_input_dns') }}"
+              base_address: 14
+
+# ------------------------------------------------------------------------------
+# Input Text Helpers for Dashboard IP Entry
+# ------------------------------------------------------------------------------
+input_number:
+  raintank_input_probe_maxheight:
+    name: "Rain Tank Probe max. height"
+    min: 1
+    max: 999
+    step: 1
+    mode: box
+    unit_of_measurement: cm
+
+  raintank_input_tank_maxheight:
+    name: "Rain Tank max. height"
+    min: 1
+    max: 999
+    step: 1
+    mode: box
+    unit_of_measurement: cm
+ 
+  raintank_input_tank_surface:
+    name: "Rain Tank surface"
+    min: 1
+    max: 65535
+    step: 1
+    mode: box
+    unit_of_measurement: cm2
+ 
+  raintank_input_min_level:
+    name: "Rain Tank minimum level"
+    min: 1
+    max: 999
+    step: 1
+    mode: box
+    unit_of_measurement: cm
+ 
+  raintank_input_refill_hysteresis:
+    name: "Rain Tank refill hysteresis"
+    min: 1
+    max: 99
+    step: 1
+    mode: box
+    unit_of_measurement: cm
+ 
+  raintank_input_valve_timeout:
+    name: "Rain Tank valve timeout"
+    min: 1
+    max: 59
+    step: 1
+    mode: box
+    unit_of_measurement: min
+ 
+  raintank_input_valve_rinse_period:
+    name: "Rain Tank valve rinse period"
+    min: 1
+    max: 31
+    step: 1
+    mode: box
+    unit_of_measurement: day
+ 
+  raintank_input_valve_rinse_duration:
+    name: "Rain Tank valve rinse duration"
+    min: 1
+    max: 59
+    step: 1
+    mode: box
+    unit_of_measurement: min
+ 
+input_text:
+  raintank_input_ip:
+    name: "Rain Tank Static IP Input"
+    initial: "192.168.1.234"
+    max: 15
+    pattern: "[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}"
+    mode: text
+
+  raintank_input_gateway:
+    name: "Rain Tank Gateway IP Input"
+    initial: "192.168.1.1"
+    max: 15
+    pattern: "[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}"
+    mode: text
+
+  raintank_input_subnet:
+    name: "Rain Tank Subnet Mask Input"
+    initial: "255.255.255.0"
+    max: 15
+    pattern: "[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}"
+    mode: text
+
+  raintank_input_dns:
+    name: "Rain Tank DNS IP Input"
+    initial: "192.168.1.1"
+    max: 15
+    pattern: "[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}"
+    mode: text
+
+# ------------------------------------------------------------------------------
+# Scripts for Writing parameters over Modbus
+# ------------------------------------------------------------------------------
+script:
+  write_modbus_register:
+    alias: "Write Modbus Register (Generic)"
+    description: "Writes a specified value to any Modbus holding register."
+    icon: mdi:tune
+    fields:
+      address:
+        description: "The target Modbus holding register address"
+        example: 100
+        required: true
+        selector:
+          number:
+            mode: box
+      value:
+        description: "The numeric value to write"
+        example: 50
+        required: true
+        selector:
+          number:
+            mode: box
+    sequence:
+      - service: modbus.write_register
+        data:
+          hub: raintank
+          address: "{{ address }}"
+          slave: 1
+          value: "{{ value | int }}"
+
+  raintank_set_ip_address:
+    alias: "Rain Tank: Set IP address"
+    description: "Configure IP addresses."
+    fields:
+      value:
+        description: "The IPv4 address or mask value string to write"
+        example: "192.168.1.234"
+        required: true
+      base_address:
+        description: "The starting Modbus register address (MSB register)"
+        example: 8
+        required: true
+    sequence:
+      - variables:
+          octets: "{{ value.split('.') }}"
+          msb: "{{ (octets[0]|int * 256) + (octets[1]|int) }}"
+          lsb: "{{ (octets[2]|int * 256) + (octets[3]|int) }}"
+
+      # Write MSB (Octets 1 & 2) to base register
+      - action: modbus.write_register
+        data:
+          hub: raintank
+          slave: 1
+          address: "{{ base_address }}"
+          value: "{{ msb }}"
+
+      # Write LSB (Octets 3 & 4) to base register + 1
+      - action: modbus.write_register
+        data:
+          hub: raintank
+          slave: 1
+          address: "{{ base_address + 1 }}"
+          value: "{{ lsb }}"
