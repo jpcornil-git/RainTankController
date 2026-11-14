@@ -1,4 +1,4 @@
-# Rain Tank Controller (`RainTankCtrl`)
+# Rain Tank Controller
 
 [![Platform: Industruino D21G](https://img.shields.io/badge/Platform-Industruino%20D21G%20%28SAMD21%29-blue.svg)](https://industruino.com/)
 [![Framework: Arduino](https://img.shields.io/badge/Framework-Arduino-00979D.svg)](https://www.arduino.cc/)
