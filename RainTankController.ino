@@ -361,6 +361,7 @@ void loop() {
       break;
 
     default:
+      // No sampling event to process
       break;
   }
 
