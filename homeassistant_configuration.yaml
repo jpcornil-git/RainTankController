@@ -121,6 +121,14 @@ modbus:
         device_class: current
         state_class: measurement
 
+      - name: "Rain Tank Probe Error Bucket"
+        unique_id: "raintank_probe_error_bucket"
+        slave: 1
+        address: 18
+        input_type: input
+        data_type: uint16
+        state_class: measurement
+
       # --- Configuration Setpoints (Holding Registers) ---
       - name: "Rain Tank Probe Max Height Setpoint"
         unique_id: "raintank_cfg_probe_max_height"

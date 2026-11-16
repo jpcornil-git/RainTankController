@@ -155,6 +155,7 @@ The controller runs a Modbus TCP server on standard **Port 502** with **Server I
 | `0` – `15` | *Configuration Mirrors* | Same as above | Live mirror of configuration parameters. |
 | `16` | **Probe Current** | microamperes ($\mu\text{A}$) | Measured 4–20 mA probe current (e.g., `4000` = 4.000 mA, `20000` = 20.000 mA). |
 | `17` | **Water Level** | millimeters ($\text{mm}$) | Calculated water level based on filtered current (e.g., `1250` = 125.0 cm). |
+| `18` | **Probe error counts** | 0 - 65535 | Level of the leaky bucket accumulating probe alarms (one alarm cost [`ALARM_PROBE_COST`](include/config.h#L53)). |
 
 ---
 
@@ -179,7 +180,7 @@ RainTankController/
 ├── .vscode/
 │   ├── arduino.json          # Arduino board (`industruino:samd:industruino_d21g`) and prebuild hook
 │   └── c_cpp_properties.json # IntelliSense configuration and include paths
-├── get_git_version.py        # Python script to extract Git SHA into git_version.h
+├── get_git_version.py        # Python script to extract Git info into git_version.h
 └── README.md                 # Project documentation
 ```
 

@@ -33,7 +33,7 @@ bool ModbusService::begin(Network *network) {
             _modbusTCPServer.configureCoils(0, 4);
             _modbusTCPServer.configureDiscreteInputs(0, 6); 
             _modbusTCPServer.configureHoldingRegisters(0, 16);
-            _modbusTCPServer.configureInputRegisters(0, 18);
+            _modbusTCPServer.configureInputRegisters(0, 19);
             Log.info("Modbus TCP server started\n");
             success = true;
         } else {
@@ -113,6 +113,7 @@ void ModbusService::update(Configuration& config, MachineState& state, bool& isS
     // Analog telemetry scaled to integer units:
     _modbusTCPServer.inputRegisterWrite(16, (uint16_t) (1000.0 * state.waterLevel_mA)); // Current scaled to microamperes (uA)
     _modbusTCPServer.inputRegisterWrite(17, (uint16_t) (10.0 * state.waterLevel_cm));   // Water level scaled to millimeters (mm)
+    _modbusTCPServer.inputRegisterWrite(18, (uint16_t) state.probeErrorCnt);            // # of probe errors (* ALARM_PROBE_COST)
 
     // -------------------------------------------------------------------------
     // 2. Client Connection Management

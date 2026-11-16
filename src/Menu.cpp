@@ -69,6 +69,8 @@ void OverviewMenuItem::render(Display* display, Configuration* config, MachineSt
     display->setLine(5, lineBuffer);
     snprintf(lineBuffer, sizeof(lineBuffer), "%s: %s (code: %d)", state->alarm->getName(), state->alarm->isActive() ? "on" : "off", state->alarmCode);
     display->setLine(6, lineBuffer);
+    snprintf(lineBuffer, sizeof(lineBuffer), "probe errors: %d", (int) ((state->probeErrorCnt + ALARM_PROBE_COST / 2) / ALARM_PROBE_COST));
+    display->setLine(7, lineBuffer);    
 }
 
 ConfirmMenuItem::ConfirmMenuItem(const char* name, bool *pConfirm) : MenuItem(name) {

@@ -50,6 +50,9 @@ const int CH_ALARM  = 2; ///< Digital output channel driving the alarm indicator
 const int ALARM_PROBE = 1 << 0; ///< Bit 0: Hydrostatic level sensor reading out of valid 4-20mA bounds.
 const int ALARM_VALVE = 1 << 1; ///< Bit 1: Refill valve remained open continuously beyond safety timeout.
 
+const int ALARM_PROBE_COST = 100;       ///< Cost of a sensor error for the “leaky bucket” mechanism (# of "drops").
+const int ALARM_PROBE_THRESHOLD = 1000; ///< Level of the leaky bucket above which a permanent probe error is declared.
+
 // -----------------------------------------------------------------------------
 // UI & Display Timing (Milliseconds)
 // -----------------------------------------------------------------------------
@@ -112,6 +115,7 @@ struct MachineState {
     Relay *alarm;           ///< Pointer to alarm annunciator output relay controller.
     bool isRinsing;         ///< True while an automated anti-seizure valve rinse cycle is active.
     unsigned alarmCode;     ///< Active alarm bitfield combining ALARM_PROBE and ALARM_VALVE flags.
+    unsigned probeErrorCnt; ///< Accumulator that counts sensor errors using a leaky bucket algorithm (one error = ALARM_PROBE_COST "drops").
 };
 
 #endif // CONFIG_H

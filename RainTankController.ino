@@ -224,6 +224,7 @@ void setup() {
   // Reset operational machine states
   state.isRinsing = false;
   state.alarmCode = 0; // Clear all alarms
+  state.probeErrorCnt = 0; // Clear leaky bucket
 
   menuItemIdx = 0; // Default to primary menu item
   isClearAlarms = false;
@@ -266,6 +267,7 @@ void loop() {
   if (isClearAlarms) {
     isClearAlarms = false;
     state.alarmCode = 0;
+    state.probeErrorCnt = 0;
     Log.info("Alarms cleared\n");
     MenuDefault();
   }
@@ -321,7 +323,8 @@ void loop() {
   // --- Valve Safety Timeout Monitoring ---
   if (relay_valve->update() == Relay::Event::Timeout) {
     Log.warning("Valve opened for too long\n");
-    state.alarmCode |= ALARM_VALVE;    
+    state.isRinsing = false; // Cancel rinse
+    state.alarmCode |= ALARM_VALVE;
   }
   relay_alarm->update(); // Alarm relay has no automatic timeout
 
@@ -331,14 +334,17 @@ void loop() {
   int isValveOn = relay_valve->isActive();
   switch (samplingEvent) {
     case Sensor_4_20mA::Event::NewSample:
+      // Bucket leak, decrease by one drop
+      if (state.probeErrorCnt > 0) state.probeErrorCnt--;
+
       state.waterLevel_mA = waterLevelProbe->read();
       // Linear conversion from 4-20mA to water height (cm) with low-pass filtering
       state.waterLevel_cm = config.probeMaxHeight_cm * (lowPassFilter->feed(state.waterLevel_mA) - 4.0) / (20.0 - 4.0);
       
       // Hysteresis refill control logic
       if (state.waterLevel_cm < config.waterLevelLow_cm) {
-        // Water below minimum threshold: open valve if no valve alarm is set
-        if (!relay_valve->isActive() && (state.alarmCode & ALARM_VALVE) == 0) {
+        // Water below minimum threshold: open valve if no alarm is set
+        if (!relay_valve->isActive() && state.alarmCode == 0) {
           Log.info("Water level below minimum\n");
           isValveOn = true;
         }
@@ -350,14 +356,15 @@ void loop() {
       break;
 
     case Sensor_4_20mA::Event::OutOfRange:
-      // Electrical fault detected on sensor loop (< 3.8mA or > 21.0mA)
-      if ((state.alarmCode & ALARM_PROBE) == 0) {
-        Log.warning("Invalid probe reading, switching valve off\n");
-        state.alarmCode |= ALARM_PROBE;
+      // Electrical fault detected on sensor loop
+      if (state.probeErrorCnt == 0) {
+        Log.warning("Invalid probe reading (reported only once)\n");
       } 
-      isValveOn = false;
-      state.waterLevel_mA = 0.0;
-      state.waterLevel_cm = 0.0;
+      if (state.probeErrorCnt < (UINT16_MAX - ALARM_PROBE_COST)) {
+        state.probeErrorCnt += ALARM_PROBE_COST;
+      } else {
+        state.probeErrorCnt = UINT16_MAX;
+      }
       break;
 
     default:
@@ -378,6 +385,14 @@ void loop() {
       rinsingStartTime = now;
       state.isRinsing = true;
     }
+  }
+
+  // If the probe leaky bucket overflow, declare a permanent error
+  if (state.probeErrorCnt > ALARM_PROBE_THRESHOLD) {
+    isValveOn = false;
+    state.alarmCode |= ALARM_PROBE;
+    state.waterLevel_mA = 0.0;
+    state.waterLevel_cm = 0.0;
   }
 
   // --- Commit Physical Relay States ---
