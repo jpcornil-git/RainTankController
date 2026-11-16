@@ -184,6 +184,8 @@ void setup() {
   Indio.setADCResolution(14);
   waterLevelProbe = new Sensor_4_20mA(CH_LEVEL_PROBE);
   waterLevelProbe->begin(PROBE_SAMPLING_PERIOD);
+  state.waterLevel_mA = max(4.0, min(20.0, waterLevelProbe->read()));
+  state.waterLevel_cm = config.probeMaxHeight_cm * (state.waterLevel_mA - 4.0) / (20.0 - 4.0);
 
   // Setup relay outputs (solenoid valve with safety timeout, alarm without timeout)
   relay_valve = new Relay(CH_VALVE, "valve");
@@ -195,7 +197,7 @@ void setup() {
 
   // Setup digital low-pass filter with first sensor reading
   lowPassFilter = new LowPassFilter(LOWPASS_COEFFICIENT);
-  lowPassFilter->init(waterLevelProbe->read());
+  lowPassFilter->init(state.waterLevel_mA);
 
   // Setup 128x64 graphic LCD display & initial splash screen
   display = new Display(PIN_BACKLIGHT, LCD_REFRESH_PERIOD);
